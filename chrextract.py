@@ -3,8 +3,10 @@ import bz2
 import sys
 import tempfile
 import logging
+import getopt
+import re
 
-logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
 class FastaFile():
 	def __init__(self,fil):
@@ -90,6 +92,8 @@ class FormatFile():
 				end=int(i.pop(0))
 				armlen=int(i.pop(0))
 				repeatsize=int(i.pop(0))
+				minrep=int(i.pop(0))
+				maxrep=int(i.pop(0))
 				fastaid="\t".join(i)
 				self.chrid_to_n.setdefault(fastaid,chrn)
 			except:
@@ -101,7 +105,7 @@ class FormatFile():
 			if self.chrid_to_n[fastaid]!=chrn:
 				raise Exception("Error in microsatellite description file (line {0}).\nfastaID does not match with chromosome number.".format(j))
 
-			self.microsatellites.setdefault(fastaid,[]).append((start,end,armlen))
+			self.microsatellites.setdefault(fastaid,[]).append((start,end,armlen,repeatsize,minrep,maxrep,chrn))
 
 	def __getitem__(self,item):
 		if item in self.microsatellites:
@@ -110,22 +114,66 @@ class FormatFile():
 			return msslist
 		return []
 
+def patternDetect(cad,patlen):
+	pattern=""
+	for i in range(patlen):
+		lettersatpos=cad[i::patlen]
+		mostrepeated={}
+		for i in lettersatpos:
+			mostrepeated.setdefault(i,0)
+			mostrepeated[i]+=1
+		mostrepeated=[i[::-1] for i in mostrepeated.items()]
+		mostrepeated.sort(reverse=True)
+		pattern+=mostrepeated[0][1]
+	
+	return pattern
+
+
+
+	
+
+def createBaits(chunk,armsize,start,end,repeatsize,minrep,maxrep,chrn,output):
+	left,right,ms=chunk[:armsize],chunk[-armsize:],chunk[armsize:-armsize]
+	pattern=patternDetect(ms,repeatsize)
+
+	if not re.match("^({0})+$".format(pattern),ms):
+		logging.warn( "Chr {3}, Pos {4} : ...{0} | {1} | {2}... NOT PURE!!!!".format(left[-20:],ms,right[:20],chrn,start))
+	else:
+		logging.debug( "Chr {3}, Pos {4} : ...{0} | {1} | {2}...".format(left[-20:],ms,right[:20],chrn,start))
+
+
+	for i in range(minrep,maxrep+1):
+		baitid="{0}_{1}_{2}:{3}:{4}:{5}:{6}:{7}".format(chrn,pattern,start,i,repeatsize,i*repeatsize,armsize,armsize+repeatsize*i)
+		output.write(">{0}\n{1}\n".format(baitid,left+pattern*i+right))
+
+
+
 if __name__=="__main__":
-	if len (sys.argv)<3:
-		logging.error("Insufficient parameters: {0} <MS_definition.txt> <fasta1.fa> <fasta2.fa> ... <fastaN.fa>".format(sys.argv[0]))
+
+	optlist, args = getopt.getopt(sys.argv[1:], 'o:')
+
+	optlist=dict(optlist)
+
+
+	if "-o" in optlist and len(args)>1:
+		output=open(optlist["-o"],"w")
+	else:
+		logging.error("Insufficient parameters: {0} -o outfile <MS_definition.txt> <fasta1.fa> <fasta2.fa> ... <fastaN.fa>".format(sys.argv[0]))
+		sys.exit(-1)
 
 	try:
-		mssdef=FormatFile(sys.argv[1])
+		mssdef=FormatFile(args[0])
 	except Exception as e:
 		logging.error(str(e))
 		sys.exit(-1)
 
-	fastafiles=sys.argv[2:]
+	fastafiles=args[1:]
 
 	for i in fastafiles:
 		ff=FastaFile(i)
 		for j in ff.getChromosomes():
-			for start,end,armsize in mssdef[j]:
+			for start,end,armsize,repeatsize,minrep,maxrep,chrn in mssdef[j]:
 				ch= ff.getChunk(j,start-armsize,end-start+1+armsize*2)
-				left,right,ms=ch[:armsize],ch[-armsize:],ch[armsize:-armsize]
-				print "...{0} | {1} | {2}...".format(left[-20:],ms,right[:20])
+				createBaits(ch,armsize,start,end,repeatsize,minrep,maxrep,chrn,output)
+
+				#print "...{0} | {1} | {2}...".format(left[-20:],ms,right[:20])
