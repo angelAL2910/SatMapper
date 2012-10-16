@@ -132,7 +132,7 @@ def patternDetect(cad,patlen):
 
 	
 
-def createBaits(chunk,armsize,start,end,repeatsize,minrep,maxrep,chrn,output):
+def createBaits(chunk,armsize,start,end,repeatsize,minrep,maxrep,chrn,output,out_loci):
 	left,right,ms=chunk[:armsize],chunk[-armsize:],chunk[armsize:-armsize]
 	pattern=patternDetect(ms,repeatsize)
 
@@ -146,6 +146,8 @@ def createBaits(chunk,armsize,start,end,repeatsize,minrep,maxrep,chrn,output):
 		baitid="{0}_{1}_{2}:{3}:{4}:{5}:{6}:{7}".format(chrn,pattern,start,i,repeatsize,i*repeatsize,armsize,armsize+repeatsize*i)
 		output.write(">{0}\n{1}\n".format(baitid,left+pattern*i+right))
 
+	out_loci.write("{0}_{1}_{2}\t{3}\t{4}\n".format(chrn,pattern,start,left,right))
+
 
 
 if __name__=="__main__":
@@ -157,6 +159,7 @@ if __name__=="__main__":
 
 	if "-o" in optlist and len(args)>1:
 		output=open(optlist["-o"],"w")
+		output_loci=open(optlist["-o"]+".msdec","w")
 	else:
 		logging.error("Insufficient parameters: {0} -o outfile <MS_definition.txt> <fasta1.fa> <fasta2.fa> ... <fastaN.fa>".format(sys.argv[0]))
 		sys.exit(-1)
@@ -174,6 +177,7 @@ if __name__=="__main__":
 		for j in ff.getChromosomes():
 			for start,end,armsize,repeatsize,minrep,maxrep,chrn in mssdef[j]:
 				ch= ff.getChunk(j,start-armsize,end-start+1+armsize*2)
-				createBaits(ch,armsize,start,end,repeatsize,minrep,maxrep,chrn,output)
+				createBaits(ch,armsize,start,end,repeatsize,minrep,maxrep,chrn,output,output_loci)
 
-				#print "...{0} | {1} | {2}...".format(left[-20:],ms,right[:20])
+	output.close()
+	output_loci.close()

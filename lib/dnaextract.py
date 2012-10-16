@@ -9,8 +9,8 @@ import re
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
 #### Input file format is:
-#### Start   End     FastA ID
-#### 10000   10100   1 dna:chromosome chromosome:GRCh37:1:1:249250621:1
+#### genebankId MarshfieldID Start   End     FastA ID
+#### 1sdfasdf   asdfasdfasdf 10000   10100   1 dna:chromosome chromosome:GRCh37:1:1:249250621:1
 
 
 class FastaFile():
@@ -91,13 +91,15 @@ class FormatFile():
 			if not i.strip() or i.startswith("#"): continue
 			i=i.strip().split("\t")
 			try:
+				geneid=i.pop(0)
+				marshid=i.pop(0)
 				start=int(i.pop(0))
 				end=int(i.pop(0))
 				fastaid="\t".join(i)
 			except:
 				raise Exception("Error in microsatellite description file (line {0}), invalid format.\nIt must be 6 tab separated fields.".format(j))
 
-			self.microsatellites.setdefault(fastaid,[]).append((start,end))
+			self.microsatellites.setdefault(fastaid,[]).append((start,end,geneid,marshid))
 
 	def __getitem__(self,item):
 		if item in self.microsatellites:
@@ -129,6 +131,6 @@ if __name__=="__main__":
 	for i in fastafiles:
 		ff=FastaFile(i)
 		for j in ff.getChromosomes():
-			for start,end in mssdef[j]:
+			for start,end,geneid,marshid in mssdef[j]:
 				ch= ff.getChunk(j,start,end-start)
-				print str(start)+"\t"+str(end)+"\t"+ch
+				print geneid+"\t"+marshid+"\t"+str(start)+"\t"+str(end)+"\t"+ch
