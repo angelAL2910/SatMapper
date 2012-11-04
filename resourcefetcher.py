@@ -57,7 +57,7 @@ class Resource:
 	def next(self):
 		line=self.nextobj.next()
 		if not self.linecount % 4:
-			line=self.individual+"@"+line
+			line="@"+self.individual+"@"+line
 		self.linecount+=1
 		return line
 
