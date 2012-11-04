@@ -159,7 +159,7 @@ if __name__=="__main__":
 
 	if "-o" in optlist and len(args)>1:
 		output=open(optlist["-o"],"w")
-		output_loci=open(optlist["-o"]+".msdec","w")
+		output_loci=open(optlist["-o"]+".msdesc","w")
 	else:
 		logging.error("Insufficient parameters: {0} -o outfile <MS_definition.txt> <fasta1.fa> <fasta2.fa> ... <fastaN.fa>".format(sys.argv[0]))
 		sys.exit(-1)

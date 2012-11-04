@@ -14,7 +14,7 @@ Usage
 
 SatMapper is made of several modules:
 
-Chromosome extractor: 
+Chromosome extractor (chrextract.py): 
 	This module extracts microsatellites from FastA files generating multiple chromosomes
 	per microsatellite and generating its multiple alleles.
 	
@@ -84,3 +84,39 @@ Chromosome extractor:
 
 	It will show the extracted microsatellites as it finds them, so you can see whether they are well defined or not.
 
+Resource fetcher (resourcefetcher.py):
+
+	This module reads fastq files which can be compressed or uncompressed and located either on internet (FTP or HTTP) or in your filesystem.
+
+	The execution of this script requires a file containing a list with all the resources to be read. The format of the file is a two column dataset
+	tab separated containing the individual name and the resource containing the files.
+
+	Tab separated fields: 
+	  
+	Field 1: Individual name (will indicate the table in the DB where alignments will be stored.
+	Field 2: FastQ file resource. Can be HTTP, FTP of filesystem resource.
+
+	An example is provided in the file fastq_input_examp.txt
+
+Alignment processor (dealer.py)
+
+	This modules accepts SAM data as standard input and populates the database with microsatellite aligning information. 
+	Database configuration can be set up in the file satmapper.cfg
+
+	Execution of this module requires as a parameter the description of the microsatellites produced by the chromosome extractor module. (msdesc file)
+
+
+EXAMPLE
+=======
+
+# Chromosome extractor tool
+python chrextract.py -o /tmp/myref.fa mss_descr_example.txt ../human_genome/h.sapiens-GRCh37.bz2
+
+# Index creation for bowtie (any other aligner can be used)
+bowtie-build /tmp/myref.fa /tmp/myidx
+
+# Resource collector reading FastQ files, sending to bowtie and storing the information into the DB
+python resourcefetcher.py fastq_input_examp.txt | bowtie --best --sam /tmp/myidx - | python dealer.py /tmp/myref.fa.msdesc
+	
+
+	
