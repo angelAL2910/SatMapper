@@ -1,16 +1,22 @@
 SatMapper by Carlos del Ojo and John Jospeh Cole
-=========================================
+================================================
 
 SatMapper is a bioinformatics pipeline for population scale genotyping of microsatellite loci, from next generation sequencing datasets. The pipeline integrates a novel whole genome alignment software index with a naive implementation of regular expressions, to align, score and filter reads. A series of peak finding algorithms based on XXX provides accurate genotyping calls. An analysis toolkit provides means of retrieving population frequencies and absolute allele counts by locus. It further provides means for visualising reads, visualsing genotype calls and for estimating hardy weinberg frequencies, both by locus and by sample.
-
-SatMapper initially accepts a user defined list of microsatellite loci, containing the genomic start and end positions, repeat unit motif length, the desired range of alleles, the required flanking sequence length and the fastQ reference sequence header for organism/chromosome. The 
 
 SatMapper Description of Workflow
 =================================
 
-1) Data Collection Phase
-   a) 
+SatMapper 
 
+1) Data Collection Phase
+
+a) Parsing of miscrosatellite loci file
+
+b) Bait construction and indexing
+
+- baits allow mining of variable repeat lengths, whilst still benefitting from the speed of bowite.
+
+c) Alignment and Scoring of Fasq reads and database population
 
 
 Requirements
