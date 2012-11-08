@@ -1,7 +1,23 @@
-SatMapper by Carlos del Ojo and John Cole
-=========================================
+SatMapper by Carlos del Ojo and John Jospeh Cole
+================================================
 
-SatMapper is a bioinformatics tool developed to genotype microsatellites found in DNA short reads.
+SatMapper is a bioinformatics pipeline for population scale genotyping of microsatellite loci, from next generation sequencing datasets. The pipeline integrates a novel whole genome alignment software index with a naive implementation of regular expressions, to align, score and filter reads. A series of peak finding algorithms based on XXX provides accurate genotyping calls. An analysis toolkit provides means of retrieving population frequencies and absolute allele counts by locus. It further provides means for visualising reads, visualsing genotype calls and for estimating hardy weinberg frequencies, both by locus and by sample.
+
+SatMapper Description of Workflow
+=================================
+
+SatMapper 
+
+1) Data Collection Phase
+
+a) Parsing of miscrosatellite loci file
+
+b) Bait construction and indexing
+
+- baits allow mining of variable repeat lengths, whilst still benefitting from the speed of bowite.
+
+c) Alignment and Scoring of Fasq reads and database population
+
 
 Requirements
 ============
