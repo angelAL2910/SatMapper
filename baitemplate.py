@@ -3,7 +3,7 @@ import bz2
 import sys
 import tempfile
 import logging
-import getopt
+from optparse import OptionParser
 import re
 
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
@@ -90,10 +90,7 @@ class FormatFile():
 				chrn=int(i.pop(0))
 				start=int(i.pop(0))
 				end=int(i.pop(0))
-				armlen=int(i.pop(0))
 				repeatsize=int(i.pop(0))
-				minrep=int(i.pop(0))
-				maxrep=int(i.pop(0))
 				fastaid="\t".join(i)
 				self.chrid_to_n.setdefault(fastaid,chrn)
 			except:
@@ -105,7 +102,7 @@ class FormatFile():
 			if self.chrid_to_n[fastaid]!=chrn:
 				raise Exception("Error in microsatellite description file (line {0}).\nfastaID does not match with chromosome number.".format(j))
 
-			self.microsatellites.setdefault(fastaid,[]).append((start,end,armlen,repeatsize,minrep,maxrep,chrn))
+			self.microsatellites.setdefault(fastaid,[]).append((start,end,repeatsize,chrn))
 
 	def __getitem__(self,item):
 		if item in self.microsatellites:
@@ -132,52 +129,51 @@ def patternDetect(cad,patlen):
 
 	
 
-def createBaits(chunk,armsize,start,end,repeatsize,minrep,maxrep,chrn,output,out_loci):
+def createBaits(chunk,armsize,start,end,repeatsize,chrn,output):
 	left,right,ms=chunk[:armsize],chunk[-armsize:],chunk[armsize:-armsize]
 	pattern=patternDetect(ms,repeatsize)
 
 	if not re.match("^({0})+$".format(pattern),ms):
-		logging.warn( "Chr {3}, Pos {4} : ...{0} | {1} | {2}... NOT PURE!!!!".format(left[-20:],ms,right[:20],chrn,start))
-	else:
-		logging.debug( "Chr {3}, Pos {4} : ...{0} | {1} | {2}...".format(left[-20:],ms,right[:20],chrn,start))
+		output.write( "# Chr {3}, Pos {4} : ...{0} | {1} | {2}... NOT PURE!!!!\n".format(left[-20:],ms,right[:20],chrn,start))
 
-
-	for i in range(minrep,maxrep+1):
-		baitid="{0}_{1}_{2}:{3}:{4}:{5}:{6}:{7}".format(chrn,pattern,start,i,repeatsize,i*repeatsize,armsize,armsize+repeatsize*i)
-		output.write(">{0}\n{1}\n".format(baitid,left+pattern*i+right))
-
-	out_loci.write("{0}_{1}_{2}\t{3}\t{4}\n".format(chrn,pattern,start,left,right))
+	output.write("{0}_{1}_{2}\t{6}\t{3}\t{4}\t{5}\n".format(chrn,pattern,start,left,right,ms,pattern))
 
 
 
 if __name__=="__main__":
+	parser = OptionParser(usage="usage: %prog <-t mss_spec_template.txt -o template.out f1.fa f2.fa.gz ...>")
+	parser.add_option("-t", "--template", dest="template", help="File containing the microsatellite spacification list.")
+	parser.add_option("-o", "--output", dest="outfile", help="Specify file out either for template or the baits fasta. If it is not specified, stdout will be used.")
+	parser.add_option("-l", "--armlength", dest="armlength", help="Specify flanking sequence sength for the baits [100 by default].")
+	armlen=100
 
-	optlist, args = getopt.getopt(sys.argv[1:], 'o:')
+	(options, args) = parser.parse_args()
 
-	optlist=dict(optlist)
+	if options.armlength:
+		armlen=int(options.armlength)
 
-
-	if "-o" in optlist and len(args)>1:
-		output=open(optlist["-o"],"w")
-		output_loci=open(optlist["-o"]+".msdesc","w")
-	else:
-		logging.error("Insufficient parameters: {0} -o outfile <MS_definition.txt> <fasta1.fa> <fasta2.fa> ... <fastaN.fa>".format(sys.argv[0]))
-		sys.exit(-1)
+	if not options.template: parser.error("You must specify a file containing a microsatellite template [-t]")
+	if not args: parser.error("You must specify at least a fasta file.")
+	
+	fout=sys.stdout
+	if options.outfile:
+		if not options.outfile.lower().endswith(".msdesc"): options.outfile+=".msdesc"
+		fout=open(options.outfile,"w")
 
 	try:
-		mssdef=FormatFile(args[0])
+		mssdef=FormatFile(options.template)
 	except Exception as e:
 		logging.error(str(e))
 		sys.exit(-1)
 
-	fastafiles=args[1:]
+	fastafiles=args
 
+	fout.write("# [Locus]\t[Pattern]\t[Left flanking seq]\t[Right Flank Seq]\t[MS]\n")
 	for i in fastafiles:
 		ff=FastaFile(i)
 		for j in ff.getChromosomes():
-			for start,end,armsize,repeatsize,minrep,maxrep,chrn in mssdef[j]:
-				ch= ff.getChunk(j,start-armsize,end-start+1+armsize*2)
-				createBaits(ch,armsize,start,end,repeatsize,minrep,maxrep,chrn,output,output_loci)
+			for start,end,repeatsize,chrn in mssdef[j]:
+				ch= ff.getChunk(j,start-armlen,end-start+1+armlen*2)
+				createBaits(ch,armlen,start,end,repeatsize,chrn,fout)
 
-	output.close()
-	output_loci.close()
+	fout.close()
