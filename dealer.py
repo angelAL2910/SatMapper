@@ -3,6 +3,7 @@ import pysam
 import getopt
 import logging
 from lib.gmod import GMOD
+from lib.BaitDesc import BaitDesc
 
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
@@ -18,35 +19,6 @@ class Dealer:
 	def __iter__(self):
 		return self
 
-class BaitGen:
-	def __init__(self,baitdescfile):
-		self.baitdescs={}
-		for i in open(baitdescfile):
-			i=i.split("\t")
-			self.baitdescs[i[0]]=[i[1],i[2]]
-
-	def get(self,key,read,readstart,reverse):
-		lread=len(read)-1
-		key=key.split(":")
-		repeats=int(key[1])
-		baitid=key[0]
-		pattern=baitid.split("_")[1]
-		gen=self.baitdescs[baitid][0]+pattern*repeats+self.baitdescs[baitid][1]
-		gen=gen[readstart:readstart+len(read)]
-		cad=[]
-		if not reverse:
-			for i in range(len(gen)):
-				if gen[i]!=read[i]:
-					cad.append("{0}:{1}>{2}".format(i,gen[i],read[i]))
-		else:
-			for i in range(len(gen)-1,-1,-1):
-				if gen[i]!=read[i]:
-					cad.append("{0}:{1}>{2}".format(lread-i,gen[i],read[i]))
-
-		return ",".join(cad)
-		
-# self.cursor.execute("create table {0} ( readname text, ref text, nrepeats integer, lenrepeat integer, lenms interger, startms integer, endms integer, read text, readstart integer, gen text, qua text, llen integer, mlen integer, rlen integer, atype integer,lmism integer, mmism integer, rmism integer, reverse integer,decim string,score integer);".format(samplename))
-			
 if __name__=="__main__":
 	optlist, args = getopt.getopt(sys.argv[1:],'')
 
@@ -56,7 +28,7 @@ if __name__=="__main__":
 		logging.error("Insufficient parameters: {0} <ms.fa.msdesc>".format(sys.argv[0]))
 		sys.exit(-1)
 
-	bg=BaitGen(sys.argv[1])
+	bg=BaitDesc(open(sys.argv[1]))
 	samfile = pysam.Samfile("-", "r" )
 	
 	deal=Dealer(samfile)
@@ -77,7 +49,7 @@ if __name__=="__main__":
 		qua=i.qual
 		readstart=i.pos
 		reverse=i.is_reverse
-		gen=bg.get(ref,read,readstart,reverse)
+		gen=bg.chunk(ref,read,readstart,reverse)
 		lenread=len(read)
 
 		if readstart>=startms and readstart+lenread<endms: continue

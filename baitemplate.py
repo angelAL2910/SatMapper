@@ -136,15 +136,15 @@ def createBaits(chunk,armsize,start,end,repeatsize,chrn,output):
 	if not re.match("^({0})+$".format(pattern),ms):
 		output.write( "# Chr {3}, Pos {4} : ...{0} | {1} | {2}... NOT PURE!!!!\n".format(left[-20:],ms,right[:20],chrn,start))
 
-	output.write("{0}_{1}_{2}\t{6}\t{3}\t{4}\t{5}\n".format(chrn,pattern,start,left,right,ms,pattern))
+	output.write("{0}_{1}_{2}\t{1}\t{3}\t{4}\t{5}\n".format(chrn,pattern,start,left,right,ms))
 
 
 
 if __name__=="__main__":
-	parser = OptionParser(usage="usage: %prog <-t mss_spec_template.txt -o template.out f1.fa f2.fa.gz ...>")
+	parser = OptionParser(usage="usage: %prog [-l ARMSLENGTH] <-t mss_spec_template.txt -o template.out f1.fa f2.fa.gz ...>")
 	parser.add_option("-t", "--template", dest="template", help="File containing the microsatellite spacification list.")
 	parser.add_option("-o", "--output", dest="outfile", help="Specify file out either for template or the baits fasta. If it is not specified, stdout will be used.")
-	parser.add_option("-l", "--armlength", dest="armlength", help="Specify flanking sequence sength for the baits [100 by default].")
+	parser.add_option("-l", "--armlength", dest="armlength", help="Specify flanking sequence length (arms length) for the baits [100 by default].")
 	armlen=100
 
 	(options, args) = parser.parse_args()
@@ -168,7 +168,7 @@ if __name__=="__main__":
 
 	fastafiles=args
 
-	fout.write("# [Locus]\t[Pattern]\t[Left flanking seq]\t[Right Flank Seq]\t[MS]\n")
+	fout.write("# [Locus]\t[# chromosome]\t[Pattern]\t[Left flanking seq]\t[Right Flank Seq]\t[MS]\n")
 	for i in fastafiles:
 		ff=FastaFile(i)
 		for j in ff.getChromosomes():

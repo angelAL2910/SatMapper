@@ -1,7 +1,7 @@
 # Format
-# [chromosome number] [start position] [end position] [arms length] [pattern length] [lower repeat boundary] [higher repeat boundary] [fastA identifier in the reference genome]
-4	3076603	3076659	10	3	1	15	4 dna:chromosome chromosome:GRCh37:4:1:191154276:1
-19	46273462	46273521	300	3	1	15	19 dna:chromosome chromosome:GRCh37:19:1:59128983:1
-1	248130347	248130366	10	2	1	15	1 dna:chromosome chromosome:GRCh37:1:1:249250621:1
-2	242866551	242866576	300	2	1	15	2 dna:chromosome chromosome:GRCh37:2:1:243199373:1
-22	40697176	40697199	300	3	1	15	22 dna:chromosome chromosome:GRCh37:22:1:51304566:1
+# [chromosome number] [start position] [end position] [pattern length] [fastA identifier in the reference genome]
+4	3076603	3076659	3	4 dna:chromosome chromosome:GRCh37:4:1:191154276:1 REF
+19	46273462	46273521	3	19 dna:chromosome chromosome:GRCh37:19:1:59128983:1 REF
+1	248130347	248130366	2	1 dna:chromosome chromosome:GRCh37:1:1:249250621:1 REF
+2	242866551	242866576	2	2 dna:chromosome chromosome:GRCh37:2:1:243199373:1 REF
+22	40697176	40697199	3	22 dna:chromosome chromosome:GRCh37:22:1:51304566:1 REF
