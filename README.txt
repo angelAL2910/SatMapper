@@ -64,11 +64,8 @@ Chromosome extractor (chrextract.py):
 	  Field 1: Chromosome number (must be an integer number)
 	  Field 2: Start position in the chromosome (position of the first nucleotide in the MS)
 	  Field 3: End position in the chromosome (position of the LAST nucleotide IN the MS)
-	  Field 4: Flanking sites length for each bait chromosome
-	  Field 5: Repeat pattern length
-	  Field 6: Minimum number of repeats to be generated for this specific locus
-	  Field 7: Maximum number of repeats to be generated for this specific locus
-	  Field 8: Chromosome ID in the FastA files (it must match the chromosome number always)
+	  Field 4: Repeat pattern length
+	  Field 5: Chromosome ID in the FastA files (it must match the chromosome number always)
 	  
 	  Example:
 	  4	3076603	3076659	10	3	1	20	4 dna:chromosome chromosome:GRCh37:4:1:191154276:1

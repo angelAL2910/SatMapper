@@ -23,13 +23,18 @@ if __name__=="__main__":
 
 	fin=sys.stdin
 	if options.temp_in: fin=open(options.temp_in)
+	else: sys.stderr.write("Reading from <stdin>, ctrl+c to interrupt (execute with --help for more info)\n")
 
 	fout=sys.stdout
 	if options.fafile:
 		if not options.fafile.lower().endswith(".fa"): options.fafile+=".fa"
 		fout=open(options.fafile,"w")
 
-	bd=BaitDesc(fin)
+	try:
+		bd=BaitDesc(fin)
+	except KeyboardInterrupt as e:
+		print "Cancelling..."
+		sys.exit(-1)
 
 	bd.generatelist(lowlim,highlim,fout)
 
