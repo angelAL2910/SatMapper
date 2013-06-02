@@ -1,9 +1,8 @@
-SatMapper by Carlos del Ojo and John Joseph Cole
-================================================
+## SatMapper by Carlos del Ojo and John Joseph Cole ##
 
 SatMapper is a bioinformatics pipeline for population scale genotyping of microsatellite loci, from next generation sequencing datasets. The pipeline integrates a novel whole genome alignment software index with a naive implementation of regular expressions, to align, score and filter reads. A series of peak finding algorithms based on XXX provides accurate genotyping calls. An analysis toolkit provides means of retrieving population frequencies and absolute allele counts by locus. It further provides means for visualising reads, visualsing genotype calls and for estimating hardy weinberg frequencies, both by locus and by sample.
 
-## SatMapper Description of Workflow ##
+### SatMapper Description of Workflow ###
 
 SatMapper 
 
@@ -12,16 +11,17 @@ SatMapper
 * Bait construction and indexing (baits allow mining of variable repeat lengths, whilst still benefitting from the speed of bowite.)
 * Alignment and Scoring of Fasq reads and database population
 
-## Requirements ##
+### Requirements ###
 
 [pysam](https://code.google.com/p/pysam/) - Python interface for the SAM/BAM sequence alignment and mapping format
+
 [Bowtie](http://bowtie-bio.sourceforge.net/index.shtml) - An ultrafast memory-efficient short read aligner
 
-## Usage ##
+### Usage ###
 
 SatMapper is made of several modules:
 
-### msdescgen.py ###
+#### msdescgen.py (MS description generator) ###
 
 msdescgen.py: (MS description generator) Creates a TSV file containing the
 description of every microsatellite
@@ -63,7 +63,7 @@ tab-separated values. The first line ( comment # ) wether the MS has been found
 pure or not.
  
  
-#### Example ####
+##### Example #####
 
 TEMPLATE containing exact position for every MS:
     $ cat mss_descr_example.txt
@@ -127,7 +127,7 @@ Generating the bait chromosomes, with MS lengths between 3 and 9bp:
     TTATCAAAATGAAATACACACACGCACACACCTCATGG
 
 
-Resource fetcher (resourcefetcher.py):
+#### Resource fetcher (resourcefetcher.py) ####
 
 This module reads fastq files which can be compressed or uncompressed and located either on internet (FTP or HTTP) or in your filesystem.
 
@@ -136,10 +136,10 @@ tab separated containing the individual name and the resource containing the fil
 
 Tab separated fields: 
   
-Field 1: Individual name (will indicate the table in the DB where alignments will be stored.
-Field 2: FastQ file resource. Can be HTTP, FTP of filesystem resource.
+* Field 1: Individual name (will indicate the table in the DB where alignments will be stored.
+* Field 2: FastQ file resource. Can be HTTP, FTP of filesystem resource.
 
-An example is provided in the file fastq_input_examp.txt
+An example is provided in the file [fastq_input_examp.txt](https://github.com/coelias/SatMapper/blob/master/fastq_input_examp.txt)
 
 Alignment processor (dealer.py)
 
@@ -149,8 +149,6 @@ Database configuration can be set up in the file satmapper.cfg
 Execution of this module requires as a parameter the description of the microsatellites produced by the chromosome extractor module. (msdesc file)
 
 
-EXAMPLE
-=======
 
 # Chromosome extractor tool
 python chrextract.py -o /tmp/myref.fa mss_descr_example.txt ../human_genome/h.sapiens-GRCh37.bz2
