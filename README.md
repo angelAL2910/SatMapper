@@ -4,12 +4,13 @@ SatMapper is a bioinformatics pipeline for population scale genotyping of micros
 
 ### SatMapper Description of Workflow ###
 
-SatMapper 
+Satmapper requires few steps in order to genotype microsatellites 
 
-* Data Collection Phase
-* Parsing of miscrosatellite loci file
-* Bait construction and indexing (baits allow mining of variable repeat lengths, whilst still benefitting from the speed of bowite.)
-* Alignment and Scoring of Fasq reads and database population
+* Generating template file: The template file is a TSV file (tab separated values) containing positions and coordinates of the microsatellites you are interested in. You can use software like [TRF](http://tandem.bu.edu/trf/trf.html), but you will need to convert tohe output to the format used in SatMapper (described below)
+* Bait construction and indexing (baits allow mining of variable repeat lengths, whilst still benefitting from the speed of bowite.): Creation if bait chromosomes that will be used to fish the reads containig microsatellites.
+* Alignment and Scoring of Fasq reads and database population.
+* Genotyping: Command line user interface that allows to query the database and get information about the genotypes calculated for every microsatellite.
+* Data visualization
 
 ### Requirements ###
 
@@ -63,7 +64,7 @@ tab-separated values. The first line ( comment # ) wether the MS has been found
 pure or not.
  
  
-##### Example #####
+##### Example. Generating template and bait chromosomes. #####
 
 TEMPLATE containing exact position for every MS:
 
@@ -145,7 +146,7 @@ Chromosome IDs have a special format which provides all the information about th
 
 #### Resource fetcher (resourcefetcher.py) ####
 
-This module reads fastq files which can be compressed or uncompressed and located either on internet (FTP or HTTP) or in your filesystem.
+This module reads a list of resources from a TSV file and dumps them to the standard output. Resources must be Fastq files (which can be compressed or uncompressed) and can be located either on internet (FTP or HTTP) or in your own filesystem.
 
 The execution of this script requires a file containing a list with all the resources to be read. The format of the file is a two column dataset
 tab separated values containing the individual name and the resource containing the files.
@@ -155,26 +156,57 @@ Format:
 * Field 1: Individual name (will indicate the table in the DB where alignments will be stored.
 * Field 2: FastQ file resource. Can be HTTP, FTP of filesystem resource.
 
-An example is provided in the file [fastq_input_examp.txt](https://github.com/coelias/SatMapper/blob/master/fastq_input_examp.txt)
+Read names for the FastQ entries will be modified temporarily to let dealer.py module know to which sample does the read belong.
 
-The Individual name will be used to create a table in the database with the same name. All the MS found in a resource will be inserted in the indivial table
+An example of a resource TSV file is provided in the file [fastq_input_examp.txt](https://github.com/coelias/SatMapper/blob/master/fastq_input_examp.txt)
+
+The Individual name will be used to create a table in the database with the same name. All the MS found in a resource will be inserted in its individual table
 
 #### Alignment processor (dealer.py) ####
 
-This modules accepts SAM data as standard input and populates the database with microsatellite aligning information. 
+The resource fetcher dumps all the data to the aligner (bowtie) and the SAM output is redirected to the dealer.py module, which extracts all the information regarding the microsatellite
+and populated the database. 
 Database configuration can be set up in the file satmapper.cfg
 
-Execution of this module requires as a parameter the description of the microsatellites produced by the chromosome extractor module. (msdesc file)
+Execution of this module requires as a parameter the description of the microsatellites produced by the chromosome extractor module (msdescgen.py) . (msdesc file)
 
 
-# Chromosome extractor tool
-python chrextract.py -o /tmp/myref.fa mss_descr_example.txt ../human_genome/h.sapiens-GRCh37.bz2
+### Example ### 
 
-# Index creation for bowtie (any other aligner can be used)
-bowtie-build /tmp/myref.fa /tmp/myidx
+First we generate the .msdesc file, accordig to our selected 
 
-# Resource collector reading FastQ files, sending to bowtie and storing the information into the DB
-python resourcefetcher.py fastq_input_examp.txt | bowtie --best --sam /tmp/myidx - | python dealer.py /tmp/myref.fa.msdesc
+We generate the MS description file (.msdesc)
+
+    $ python msdescgen.py -t mss_descr_example.txt -l 15 /data/chrs/*.fa
+    INFO: Reading chromosome gi|224384768|gb|CM000663.1| Homo sapiens chromosome 1, GRC primary reference assembly...
+    INFO: Reading chromosome gi|224384750|gb|CM000681.1| Homo sapiens chromosome 19, GRC primary reference assembly...
+    INFO: Reading chromosome gi|224384767|gb|CM000664.1| Homo sapiens chromosome 2, GRC primary reference assembly...
+    INFO: Reading chromosome gi|224384747|gb|CM000684.1| Homo sapiens chromosome 22, GRC primary reference assembly...
+    INFO:  *** [ mss-out.msdesc ] *** WRITTEN!
+   
+We check mss-out.msdesc to check wether there are mistakes or not in the MSS definition.
+    
+    ...
+    # Ok!: ...GAAATGGTCTGTGATCCCCC | CAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAG | CATTCCCGGCTACAAGGACC...
+    19_CAG_46273462.2  CAG        GGTCTGTGATCCCCC      TTCCCGGCTACAAGG      CAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAG
+    # Ok!: ...GATGATTATCAAAATGAAAT | ACACACACACACACACACACACACAC | GCACACACCTCATGGAGCTC...
+    2_AC_242866551     AC         TTATCAAAATGAAAT      GCACACACCTCATGG      ACACACACACACACACACACACACAC
+    # Ok!: ...GCTCGAATGGTGAGTGCACT | GCAGCAGCAGCAGCAGCAGCAGCA | GAGGCAGCCAGGCATGAAGC...
+    22_GCA_40697176.1  GCA        AATGGTGAGTGCACT      AGGCAGCCAGGCATG      GCAGCAGCAGCAGCAGCAGCAGCA
+	...
+   
+Generating the bait chromosomes, with MS lengths between 3 and 9bp:
+
+    $ python baitsgen.py -i mss-out.msdesc -b 3 -t 9
+    INFO:  *** [ out-baits.fa ] *** WRITTEN!
+
+Generating bowtie index of the bait chromosomes
+
+	$ bowtie-build out-baits.fa /tmp/myidx
+
+Processing resources and storing data in the database.
+
+    $ python resourcefetcher.py fastq_input_examp.txt | bowtie --best --sam /tmp/myidx - | python dealer.py mss-out.msdesc
 	
 
 	
