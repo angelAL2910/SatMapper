@@ -66,6 +66,7 @@ pure or not.
 ##### Example #####
 
 TEMPLATE containing exact position for every MS:
+
     $ cat mss_descr_example.txt
     
     19	46273462	46273521	3	gi|224384750|gb|CM000681.1| Homo sapiens chromosome 19, GRC primary reference assembly
@@ -74,6 +75,7 @@ TEMPLATE containing exact position for every MS:
     22	40697176	40697199	3	gi|224384747|gb|CM000684.1| Homo sapiens chromosome 22, GRC primary reference assembly
     
 Extracting MS to generatos a microsatellite description file:
+
     $ python msdescgen.py -t mss_descr_example.txt -l 15 /data/chrs/*.fa
     INFO: Reading chromosome gi|224384768|gb|CM000663.1| Homo sapiens chromosome 1, GRC primary reference assembly...
     INFO: Reading chromosome gi|224384750|gb|CM000681.1| Homo sapiens chromosome 19, GRC primary reference assembly...
@@ -82,6 +84,7 @@ Extracting MS to generatos a microsatellite description file:
     INFO:  *** [ mss-out.msdesc ] *** WRITTEN!
    
 Content of the .msdesc file:
+
     $ cat mss-out.msdesc
     
     #[Locus]           [Pattern]  [Left flanking seq]  [Right  Flank  Seq]  [MS]
@@ -126,28 +129,42 @@ Generating the bait chromosomes, with MS lengths between 3 and 9bp:
     >2_AC_242866551:4:2:8:15:23
     TTATCAAAATGAAATACACACACGCACACACCTCATGG
 
+Chromosome IDs have a special format which provides all the information about the MS:
+
+###### 19_CAG_46273462.2:2:3:6:15:21 ######
+
+* chromosome number: 19
+* MS pattern: CAG
+* chromosome position: 46273462
+* Facrtion part: 2 (optional field, fractional part can be missing)
+* copy number (repeats): 2
+* pattern size (bp): 3
+* MS length: 6 (2 * 3)
+* MS start position in the bait: 15
+* MS end position in the beit: 21
 
 #### Resource fetcher (resourcefetcher.py) ####
 
 This module reads fastq files which can be compressed or uncompressed and located either on internet (FTP or HTTP) or in your filesystem.
 
 The execution of this script requires a file containing a list with all the resources to be read. The format of the file is a two column dataset
-tab separated containing the individual name and the resource containing the files.
+tab separated values containing the individual name and the resource containing the files.
 
-Tab separated fields: 
+Format: 
   
 * Field 1: Individual name (will indicate the table in the DB where alignments will be stored.
 * Field 2: FastQ file resource. Can be HTTP, FTP of filesystem resource.
 
 An example is provided in the file [fastq_input_examp.txt](https://github.com/coelias/SatMapper/blob/master/fastq_input_examp.txt)
 
-Alignment processor (dealer.py)
+The Individual name will be used to create a table in the database with the same name. All the MS found in a resource will be inserted in the indivial table
+
+#### Alignment processor (dealer.py) ####
 
 This modules accepts SAM data as standard input and populates the database with microsatellite aligning information. 
 Database configuration can be set up in the file satmapper.cfg
 
 Execution of this module requires as a parameter the description of the microsatellites produced by the chromosome extractor module. (msdesc file)
-
 
 
 # Chromosome extractor tool
