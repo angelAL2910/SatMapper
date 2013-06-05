@@ -171,7 +171,7 @@ Database configuration can be set up in the file satmapper.cfg
 Execution of this module requires as a parameter the description of the microsatellites produced by the chromosome extractor module (msdescgen.py) . (msdesc file)
 
 
-### Example ### 
+### Example ###
 
 First we generate the .msdesc file, accordig to our selected 
 
@@ -210,3 +210,9 @@ Processing resources and storing data in the database.
 	
 
 	
+## TODO ##
+
+* This is a pre-release verion.
+* Genotyping code and command line interface is about to be finished.
+* Error handling and reporting is about to be finished.
+* Whole pipeline wrapper not yet designed.
