@@ -1,13 +1,19 @@
+#!/usr/bin/python
+# SatMapper - 2012-2013 Carlos del Ojo and John Cole.
+# This code is part of the SATMAPPER software and governed by its
+# license.  Please see the LICENSE file that should have been included
+# as part of this package.
+
 import os
 import logging
 import sys
 import bz2
-import gzip
+from lib.fastgzip import FastGzip
 import urllib2
 import re
 import socket
 import tempfile
-socket.setdefaulttimeout(5)
+socket.setdefaulttimeout(10)
 
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
@@ -36,16 +42,20 @@ class Resource:
 	def __iter__(self):
 		if self.restype=="URL":
 			self.tempfile=self.resfile=tempfile.NamedTemporaryFile(mode="w+b")
-			self.resfile.write(urllib2.urlopen(self.res).read())
+			resource=urllib2.urlopen(self.res)
+			data=resource.read(1024*1024)
+			while data:
+				self.resfile.write(data)
+				data=resource.read(1024*1024)
 			self.resfile.seek(0)
 			if self.compression=="GZ":
-				self.resfile = gzip.GzipFile(mode='rb', fileobj=self.resfile)
+				self.resfile = FastGzip(fileobj=self.resfile)
 			elif self.compression=="BZ2":
 				self.resfile = bz2.BZ2File(self.resfile.name,mode='rb')
 
 		else:
 			if self.compression=="GZ":
-				self.resfile = gzip.GzipFile(self.res,mode='rb')
+				self.resfile = FastGzip(self.res)
 			elif self.compression=="BZ2":
 				self.resfile = bz2.BZ2File(self.res,mode='rb')
 			else:
@@ -95,13 +105,17 @@ if __name__=="__main__":
 			logging.error( "ERROR --> {0}".format(i))
 			logging.error( "Invalid format, please read README.txt")
 			sys.exit(-1)
-	
 		try:
 			resources.append(Resource(j[0],j[1]))
 		except Exception as e:
 			logging.error( "Resource error:" + str(e))
 		
 	for i in resources:
-		for k in i:
-			sys.stdout.write(k)
-		i.close()
+		try:
+			for k in i:
+				sys.stdout.write(k)
+			i.close()
+		except:
+			fil=open("errors.txt","a")
+			fil.write("Error in resource {0} \n".format(str(i.res)))
+			fil.close()
