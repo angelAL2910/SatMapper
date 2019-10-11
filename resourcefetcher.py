@@ -80,7 +80,7 @@ class Resource:
 			self.resfile.close()
 
 def usage():
-	print "You need to provide a file with the FastQ file input information, please read REAME.txt\nUsage: {0} resources.txt\n".format(sys.argv[0])
+	print "You need to provide a file with the FastQ file input information, please read README.txt\nUsage: {0} resources.txt\n".format(sys.argv[0])
 	sys.exit(-1)
 
 
